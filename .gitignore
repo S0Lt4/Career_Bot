@@ -1,0 +1,15 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Database
+database/bot_data.db
+
+# Reports and temporary files
+reports/
+*.png

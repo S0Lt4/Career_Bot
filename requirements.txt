@@ -1,0 +1,8 @@
+discord.py
+jinja2
+discord.py
+jinja2
+Pillow
+beautifulsoup4
+requests
+python-dotenv
