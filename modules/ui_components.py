@@ -49,7 +49,7 @@ class CareerQuizView(View):
             progress = f"({self.current_step + 1}/{len(self.questions)})"
             
             btn_yes = Button(label="Evet", style=discord.ButtonStyle.green, custom_id="yes")
-            btn_maybe = Button(label="Kısmen", style=discord.ButtonStyle.secondary, custom_id="maybe")
+            btn_maybe = Button(label="🟡 Kısmen", style=discord.ButtonStyle.primary, custom_id="maybe")
             btn_no = Button(label="Hayır", style=discord.ButtonStyle.danger, custom_id="no")
             
             # Bu butonların ait olduğu adım (step)
@@ -100,24 +100,40 @@ class CareerQuizView(View):
         # 1. DB Güncelle (Normalize edilmiş puanlarla)
         self.db.update_user_scores(self.user_id, self.username, normalized_scores)
         
-        # 2. En iyi mesleği bul
+        # 2. En iyi 3 mesleği bul (yüzdelerle birlikte)
         careers = self.db.get_all_careers()
-        best_match = self.calculator.calculate_best_career(normalized_scores, careers)
+        from modules.calculator import calculate_top_careers
+        top_matches = calculate_top_careers(normalized_scores, careers, top_n=3)
+        
+        # En iyi eşleşme (rapor ve kart için)
+        best_match = top_matches[0]['career'] if top_matches else None
+        best_percentage = top_matches[0]['match_percentage'] if top_matches else 0
         
         # 3. Rapor oluştur
         report_path = self.reporter.generate_report(self.username, normalized_scores, best_match)
         
-        # 4. [YENİ] Görsel Kart Oluştur
+        # 4. Görsel Kart Oluştur
         from modules.visualizer import CareerVisualizer
         viz = CareerVisualizer()
         card_path = viz.create_career_card(self.username, best_match, normalized_scores)
         
         # 5. Sonuçları gönder
         embed = discord.Embed(title=f"🎉 Tebrikler {self.username}!", color=0x3498db)
-        embed.description = "Analiz tamamlandı! İşte sonuçların:"
+        embed.description = "Analiz tamamlandı! İşte sana en uygun 3 meslek:"
         
-        embed.add_field(name="Sana En Uygun Meslek", value=f"**{best_match['title']}**", inline=False)
-        embed.add_field(name="Tanım", value=best_match['description'], inline=False)
+        # Top 3 meslekleri göster
+        medals = ["🥇", "🥈", "🥉"]
+        top_careers_text = ""
+        for i, match in enumerate(top_matches):
+            career = match['career']
+            percentage = match['match_percentage']
+            medal = medals[i] if i < len(medals) else "•"
+            top_careers_text += f"{medal} **{career['title']}** - %{percentage} uyum\n"
+        
+        embed.add_field(name="📊 Kariyer Eşleşmelerin", value=top_careers_text, inline=False)
+        
+        # En iyi mesleğin detayı
+        embed.add_field(name=f"🎯 1. Tercih: {best_match['title']}", value=best_match['description'], inline=False)
         
         # Puanları da gösterelim
         scores_text = (
@@ -125,7 +141,7 @@ class CareerQuizView(View):
             f"**Sosyal:** {normalized_scores['sosyal']}/10\n"
             f"**Yaratıcılık:** {normalized_scores['yaraticilik']}/10"
         )
-        embed.add_field(name="Kişilik Analizin", value=scores_text, inline=False)
+        embed.add_field(name="🧠 Kişilik Analizin", value=scores_text, inline=False)
         
         embed.set_image(url=f"attachment://card_{self.username}.png")
         embed.set_footer(text="Detaylı rapor ve görsel analiz ekte! 👇")
@@ -135,3 +151,4 @@ class CareerQuizView(View):
         
         await interaction.followup.send(embed=embed, files=[file_report, file_card])
         self.stop()
+

@@ -41,10 +41,10 @@ class CareerVisualizer:
             # Normalize: Assume 500+ items is "Very Popular" (100 pts)
             score = min(100, int((density / 500) * 100))
             
-            if score > 80: label = "Çok Popüler 🔥"
-            elif score > 50: label = "Popüler ⭐"
-            elif score > 20: label = "Gelişmekte 📈"
-            else: label = "Niş Alan 🎯"
+            if score > 80: label = "Çok Popüler "
+            elif score > 50: label = "Popüler "
+            elif score > 20: label = "Gelişmekte "
+            else: label = "Niş Alan "
             
             return score, label
 
