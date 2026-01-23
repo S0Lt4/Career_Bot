@@ -7,56 +7,189 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kariyer Raporu - {{ user_name }}</title>
+    <title>Kariyer Analizi - {{ user_name }}</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        .result-card { background: #e8f6f3; border-left: 5px solid #1abc9c; padding: 20px; margin: 20px 0; }
-        .result-title { font-size: 24px; font-weight: bold; color: #16a085; }
-        .scores { display: flex; justify-content: space-around; margin: 30px 0; flex-wrap: wrap; }
-        .score-box { text-align: center; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); min-width: 100px; margin: 10px; }
-        .score-val { font-size: 2em; font-weight: bold; color: #3498db; }
-        .btn { display: inline-block; background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 10px; }
-        .btn:hover { background: #2980b9; }
-        .footer { margin-top: 50px; font-size: 0.8em; color: #7f8c8d; text-align: center; }
+        :root {
+            /* Palette: Black, Deep Dark Blue/Purple, Coffee, White, Dark Red, Dark Yellow */
+            --bg-color: #050510;       /* Very Dark Blue/Black */
+            --card-bg: #121016;        /* Deep matte purple/black */
+            --text-main: #e0e0e0;      /* White-ish */
+            --text-muted: #a0a0a0;     /* Grey */
+            
+            --accent-purple: #7b4397;  /* Primary Purple */
+            --accent-coffee: #3e2723;  /* Dark Coffee */
+            --accent-blue: #1565c0;    /* Dark Blue */
+            --accent-red: #c62828;     /* Dark Red */
+            --accent-yellow: #f9a825;  /* Dark Yellow */
+        }
+        
+        body { 
+            font-family: 'Segoe UI', serif; /* Simple, elegant font */
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .container { 
+            width: 100%;
+            max-width: 800px; 
+            margin: 40px 20px; 
+            background: var(--card-bg); 
+            padding: 40px; 
+            border-radius: 8px; /* Simple corners */
+            border: 1px solid #2a202e; /* Subtle border */
+        }
+        
+        h1 { 
+            color: var(--accent-purple); 
+            font-size: 2.2rem; 
+            margin-bottom: 0.5rem; 
+            text-align: center;
+            border-bottom: 2px solid var(--accent-coffee);
+            padding-bottom: 15px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            font-style: italic;
+        }
+        
+        .result-card { 
+            background-color: #1a151e; /* Slightly lighter than card-bg */
+            padding: 30px; 
+            border-left: 5px solid var(--accent-purple);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .result-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .result-title { 
+            font-size: 2.5rem; 
+            font-weight: bold; 
+            color: var(--text-main);
+            margin: 0;
+        }
+        
+        .result-desc {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #d1d1d1;
+            margin: 20px 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .btn { 
+            display: inline-block; 
+            background-color: var(--accent-coffee); 
+            color: #fff; 
+            font-weight: bold;
+            padding: 12px 30px; 
+            text-decoration: none; 
+            border-radius: 4px; /* Simple button */
+            margin-top: 10px;
+            border: 1px solid #5d4037;
+        }
+        .btn:hover { 
+            background-color: #4e342e; 
+            border-color: #8d6e63;
+        }
+        
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .stat-box { 
+            background: rgba(255,255,255,0.03); 
+            padding: 20px; 
+            text-align: center;
+            border-radius: 4px;
+        }
+        
+        /* Specific Colors for Stats */
+        .stat-box.blue { border-top: 3px solid var(--accent-blue); }
+        .stat-box.red { border-top: 3px solid var(--accent-red); }
+        .stat-box.yellow { border-top: 3px solid var(--accent-yellow); }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .stat-val { 
+            font-size: 2.5rem; 
+            font-weight: bold; 
+            color: var(--text-main);
+        }
+        
+        .stat-sub {
+            font-size: 0.8rem;
+            color: #757575; /* Dark grey */
+            margin-top: 5px;
+        }
+        
+        .footer { 
+            margin-top: 60px; 
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            font-size: 0.8rem; 
+            color: #666; 
+            text-align: center; 
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Kariyer Keşif Raporu</h1>
-        <p>Merhaba <strong>{{ user_name }}</strong>, verdiğin cevaplara göre senin için en uygun kariyer yolunu analiz ettik.</p>
+        <h1>Kariyer Raporu</h1>
+        <p class="subtitle">Aday: <strong>{{ user_name }}</strong> | ID: #{{ date }}</p>
         
         <div class="result-card">
-            <div>Senin için Önerilen Meslek:</div>
+            <span class="result-label">Yapay Zeka Önerisi</span>
             <div class="result-title">{{ career_title }}</div>
-            <p>{{ career_desc }}</p>
-            <a href="{{ roadmap_url }}" class="btn" target="_blank">Yol Haritasını İncele</a>
+            <p class="result-desc">{{ career_desc }}</p>
+            <a href="{{ roadmap_url }}" class="btn" target="_blank">Yol Haritasını Görüntüle →</a>
         </div>
 
-        <h3>Kişisel Puanların vs Meslek Gereksinimleri</h3>
-        <div class="scores">
-            <div class="score-box">
-                <div>Analitik</div>
-                <div class="score-val">{{ u_a }} / 10</div>
-                <small>Meslek: {{ c_a }}</small>
+        <h3 style="text-align:center; color: var(--text-main); font-weight: normal; margin-bottom: 20px;">Yetkinlik Analizi</h3>
+        <div class="stats-grid">
+            <div class="stat-box blue">
+                <div class="stat-label">ANALİTİK ZEKA</div>
+                <div class="stat-val" style="color: #42a5f5;">{{ u_a }}<span style="font-size:1rem; opacity:0.5; color: #aaa;">/10</span></div>
+                <div class="stat-sub">Hedef: {{ c_a }}</div>
             </div>
-            <div class="score-box">
-                <div>Sosyal</div>
-                <div class="score-val">{{ u_s }} / 10</div>
-                <small>Meslek: {{ c_s }}</small>
+            <div class="stat-box red">
+                <div class="stat-label">SOSYAL BECERİ</div>
+                <div class="stat-val" style="color: #ef5350;">{{ u_s }}<span style="font-size:1rem; opacity:0.5; color: #aaa;">/10</span></div>
+                <div class="stat-sub">Hedef: {{ c_s }}</div>
             </div>
-            <div class="score-box">
-                <div>Yaratıcılık</div>
-                <div class="score-val">{{ u_y }} / 10</div>
-                <small>Meslek: {{ c_y }}</small>
+            <div class="stat-box yellow">
+                <div class="stat-label">YARATICILIK</div>
+                <div class="stat-val" style="color: #fdd835;">{{ u_y }}<span style="font-size:1rem; opacity:0.5; color: #aaa;">/10</span></div>
+                <div class="stat-sub">Hedef: {{ c_y }}</div>
             </div>
         </div>
 
-        <p>Bu rapor tamamen Python kullanılarak, senin cevaplarına özel olarak oluşturulmuştur.</p>
-        
         <div class="footer">
-            Career Bot Demo Tarafından Oluşturuldu - {{ date }}
+            Generated by CareerBot AI System • {{ date }}
         </div>
     </div>
 </body>

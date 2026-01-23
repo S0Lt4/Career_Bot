@@ -1,20 +1,22 @@
 
 import requests
 from bs4 import BeautifulSoup
-from PIL import Image, ImageDraw, ImageFont
+import matplotlib.pyplot as plt
+import numpy as np
 import os
+from matplotlib.gridspec import GridSpec
 
 class CareerVisualizer:
     def __init__(self):
-        self.font_path = "arial.ttf" # Windows default
-        try:
-            self.title_font = ImageFont.truetype(self.font_path, 40)
-            self.text_font = ImageFont.truetype(self.font_path, 20)
-            self.small_font = ImageFont.truetype(self.font_path, 15)
-        except:
-            self.title_font = ImageFont.load_default()
-            self.text_font = ImageFont.load_default()
-            self.small_font = ImageFont.load_default()
+        # Matplotlib style configuration for dark "Scientific" theme
+        plt.style.use('dark_background')
+        self.colors = {
+            'bg': '#1a1a2e',
+            'user': '#00d2fc',    # Neon Blue
+            'career': '#ff005c',  # Neon Red/Pink
+            'grid': '#323259',
+            'text': '#e0e0e0'
+        }
 
     def get_popularity_score(self, url):
         """
@@ -33,7 +35,7 @@ class CareerVisualizer:
 
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Simple heuristic: Count links and lists as a proxy for "Resource Density"
+            # Simple heuristic
             links = len(soup.find_all('a'))
             lists = len(soup.find_all('li'))
             density = links + lists
@@ -41,10 +43,10 @@ class CareerVisualizer:
             # Normalize: Assume 500+ items is "Very Popular" (100 pts)
             score = min(100, int((density / 500) * 100))
             
-            if score > 80: label = "Çok Popüler "
-            elif score > 50: label = "Popüler "
-            elif score > 20: label = "Gelişmekte "
-            else: label = "Niş Alan "
+            if score > 80: label = "Çok Popüler"
+            elif score > 50: label = "Popüler"
+            elif score > 20: label = "Gelişmekte"
+            else: label = "Niş Alan"
             
             return score, label
 
@@ -54,45 +56,115 @@ class CareerVisualizer:
 
     def create_career_card(self, username, career, user_scores):
         """
-        Generates a PNG image card.
+        Generates a High-Quality Scientific Plot image card.
         """
-        width, height = 800, 400
-        background_color = (30, 30, 45) # Dark Blue/Grey
-        text_color = (255, 255, 255)
-        accent_color = (52, 152, 219) # Blue
+        # Create figure and grid layout
+        fig = plt.figure(figsize=(10, 6), facecolor=self.colors['bg'])
+        gs = GridSpec(2, 2, width_ratios=[1.5, 1], height_ratios=[4, 1])
         
-        image = Image.new('RGB', (width, height), background_color)
-        draw = ImageDraw.Draw(image)
+        # --- 1. RADAR CHART (Main Plot) ---
+        categories = ['Analitik', 'Sosyal', 'Yaratıcılık']
+        N = len(categories)
         
-        # 1. Title
-        draw.text((30, 30), f"Kariyer Önerisi: {career['title']}", font=self.title_font, fill=text_color)
-        draw.text((30, 80), f"Kullanıcı: {username}", font=self.text_font, fill=(200, 200, 200))
+        # Compute angles
+        angles = [n / float(N) * 2 * np.pi for n in range(N)]
+        angles += angles[:1] # Close the loop
         
-        # 2. Field & Description
-        draw.text((30, 120), f"Alan: {career['field']}", font=self.text_font, fill=accent_color)
+        # Data Setup
+        user_values = [
+            user_scores.get('analitik', 0),
+            user_scores.get('sosyal', 0),
+            user_scores.get('yaraticilik', 0)
+        ]
+        user_values += user_values[:1] # Close loop
         
-        # Wrap description
+        career_values = [
+            career['score_analitik'],
+            career['score_sosyal'],
+            career['score_yaraticilik']
+        ]
+        career_values += career_values[:1] # Close loop
+        
+        # Polar Plot
+        ax = fig.add_subplot(gs[:, 0], polar=True, facecolor=self.colors['bg'])
+        
+        # Draw User Poly
+        ax.plot(angles, user_values, color=self.colors['user'], linewidth=2, linestyle='solid', label=username)
+        ax.fill(angles, user_values, color=self.colors['user'], alpha=0.25)
+        
+        # Draw Career Poly
+        ax.plot(angles, career_values, color=self.colors['career'], linewidth=2, linestyle='dashed', label=career['title'])
+        ax.fill(angles, career_values, color=self.colors['career'], alpha=0.1)
+        
+        # Fix Axis Labels
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, fontsize=12, color='white', weight='bold')
+        
+        # Y-Labels (0-10)
+        ax.set_rlabel_position(0)
+        plt.yticks([2, 4, 6, 8, 10], ["2", "4", "6", "8", "10"], color="#aaaaaa", size=8)
+        plt.ylim(0, 10)
+        
+        # Customize Grid
+        ax.grid(color=self.colors['grid'], linewidth=1, linestyle='--')
+        ax.spines['polar'].set_visible(False) # Hide outer circle line
+        
+        # Legend (Top Left)
+        plt.legend(loc='upper left', bbox_to_anchor=(-0.1, 1.1), frameon=False, labelcolor='white')
+
+        # --- 2. TEXT INFO (Top Right) ---
+        ax_text = fig.add_subplot(gs[0, 1])
+        ax_text.axis('off')
+        
+        info_text = (
+            f"KARİYER ANALİZİ\n"
+            f"----------------\n"
+            f"ADAY: {username}\n"
+            f"MESLEK: {career['title']}\n"
+            f"ALAN: {career['field']}\n\n"
+            f"UYUM PUANLARI:\n"
+            f"A: {user_scores.get('analitik',0)} / {career['score_analitik']}\n"
+            f"S: {user_scores.get('sosyal',0)} / {career['score_sosyal']}\n"
+            f"Y: {user_scores.get('yaraticilik',0)} / {career['score_yaraticilik']}\n"
+        )
+        
+        ax_text.text(0, 0.9, info_text, color='white', fontsize=11, family='monospace', verticalalignment='top')
+        
+        # Description
         desc = career['description']
-        # Simple wrapping logic for visualization (truncate if too long)
-        if len(desc) > 60: desc = desc[:60] + "..."
-        draw.text((30, 150), desc, font=self.text_font, fill=text_color)
-        
-        # 3. Popularity Section
+        if len(desc) > 80: desc = desc[:80] + "..."
+        ax_text.text(0, 0.3, f"TANIM:\n{desc}", color='#aaaaaa', fontsize=9, wrap=True, verticalalignment='top')
+
+        # --- 3. POPULARITY METER (Bottom Right) ---
         pop_score, pop_label = self.get_popularity_score(career['roadmap_url'])
         
-        draw.text((30, 220), "Kariyer Ekosistem Popülaritesi:", font=self.text_font, fill=(255, 204, 0))
+        ax_pop = fig.add_subplot(gs[1, 1])
+        ax_pop.set_facecolor(self.colors['bg'])
         
-        # Draw Bar Background
-        bar_x, bar_y, bar_w, bar_h = 30, 250, 400, 30
-        draw.rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + bar_h], fill=(50, 50, 60))
+        # Draw a scientific-looking gauge bar
+        # Gradient effect simulated with bars
+        ax_pop.barh([0], [100], color='#333333', height=0.5) # Background
         
-        # Draw Progress
-        fill_w = int(bar_w * (pop_score / 100))
-        draw.rectangle([bar_x, bar_y, bar_x + fill_w, bar_y + bar_h], fill=(46, 204, 113))
+        # Color based on score
+        if pop_score > 80: pop_c = '#00ff00' # Green
+        elif pop_score > 50: pop_c = '#ffff00' # Yellow
+        else: pop_c = '#ff0000' # Red
+            
+        ax_pop.barh([0], [pop_score], color=pop_c, height=0.5)
         
-        draw.text((bar_x + fill_w + 10, bar_y + 5), f"{pop_score}/100 ({pop_label})", font=self.small_font, fill=text_color)
+        ax_pop.set_xlim(0, 100)
+        ax_pop.set_ylim(-0.5, 0.5)
+        ax_pop.axis('off')
         
-        # 4. Save
+        # Label above bar
+        ax_pop.text(0, 0.6, f"POPÜLARİTE ENDEKSİ: {pop_score}/100", color=pop_c, fontsize=10, weight='bold')
+        ax_pop.text(100, 0.6, pop_label, color='white', fontsize=9, ha='right')
+        
+        # --- SAVE ---
+        os.makedirs("reports", exist_ok=True)
         output_path = f"reports/card_{username}.png"
-        image.save(output_path)
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=100, bbox_inches='tight', facecolor=self.colors['bg'])
+        plt.close(fig) # Close to free memory
+        
         return output_path

@@ -13,28 +13,46 @@ class CareerQuizView(View):
         self.scores = {'analitik': 0, 'sosyal': 0, 'yaraticilik': 0}
         self.current_step = 0
         
-        # 15 Detaylı Soru (Her kategori için 5 adet)
+        # 30 Detaylı Soru (Her kategori için 10 adet)
         self.questions = [
-            # Analitik Sorular
+            # Analitik Sorular (Mevcut)
             {"text": "Karmaşık problemleri küçük, yönetilebilir parçalara ayırarak çözmekten hoşlanır mısın?", "category": "analitik"},
             {"text": "Veriler, istatistikler ve grafikler üzerinden analiz yapıp sonuç çıkarmak ilgini çeker mi?", "category": "analitik"},
             {"text": "Bir makinenin veya yazılımın arka planında nasıl çalıştığını merak edip araştırır mısın?", "category": "analitik"},
             {"text": "Satranç, sudoku veya mantık bulmacalarıyla zihnini zorlamaktan keyif alır mısın?", "category": "analitik"},
             {"text": "Teknolojik gelişmeleri yakından takip edip yeni çıkan araçları hemen denemek ister misin?", "category": "analitik"},
+            # Analitik Sorular (Yeni)
+            {"text": "Detaylı planlar ve çizelgeler oluşturup bunlara sadık kalmak senin için önemli mi?", "category": "analitik"},
+            {"text": "Bir sistemin hatasını bulup onu daha verimli hale getirmek için uğraşır mısın?", "category": "analitik"},
+            {"text": "Karar verirken duygularından çok somut verilere ve gerçeklere mi güvenirsin?", "category": "analitik"},
+            {"text": "Sebep-sonuç ilişkilerini incelemekten ve 'neden' sorusuna cevap aramaktan hoşlanır mısın?", "category": "analitik"},
+            {"text": "Finansal tablolar veya kod satırları gibi yapılandırılmış verilerle çalışmak ilgini çeker mi?", "category": "analitik"},
             
-            # Sosyal Sorular
+            # Sosyal Sorular (Mevcut)
             {"text": "İnsanlara bildiğin bir şeyi öğretmek veya onlara rehberlik etmek seni mutlu eder mi?", "category": "sosyal"},
             {"text": "Grup çalışmalarında liderlik yapmayı veya iletişimi organize etmeyi sever misin?", "category": "sosyal"},
             {"text": "Tanımadığın insanlarla dolu bir ortamda kolayca iletişim kurup kaynaşabilir misin?", "category": "sosyal"},
             {"text": "Bir tartışmada veya anlaşmazlıkta insanları ikna etme yeteneğine güvenir misin?", "category": "sosyal"},
             {"text": "Topluluk önünde konuşma yapmak veya bir fikri sunmak senin için heyecan verici midir?", "category": "sosyal"},
+            # Sosyal Sorular (Yeni)
+            {"text": "İnsanların duygusal ihtiyaçlarını fark edip onlara destek olmak senin için doğal bir refleks mi?", "category": "sosyal"},
+            {"text": "Başkalarının potansiyelini ortaya çıkarmasına yardımcı olmak seni motive eder mi?", "category": "sosyal"},
+            {"text": "Bir ekip içinde uyumu sağlamak ve çatışmaları çözmekte başarılı olduğunu düşünür müsün?", "category": "sosyal"},
+            {"text": "Farklı kültürlerden ve geçmişlerden gelen insanlarla tanışmak seni heyecanlandırır mı?", "category": "sosyal"},
+            {"text": "Hizmet odaklı bir iş yaparak insanlara doğrudan fayda sağlamak ister misin?", "category": "sosyal"},
             
-            # Yaratıcılık Soruları
+            # Yaratıcılık Soruları (Mevcut)
             {"text": "Zihninde canlandırdığın soyut bir fikri (resim, hikaye, proje) somutlaştırmayı sever misin?", "category": "yaraticilik"},
             {"text": "Olaylara herkesin baktığı açıdan değil, tamamen farklı bir perspektiften bakmayı dener misin?", "category": "yaraticilik"},
             {"text": "Bir ürünün veya ortamın estetik görünümü, renk uyumu ve tasarımı senin için önemli midir?", "category": "yaraticilik"},
             {"text": "Hazır şablonları kullanmak yerine kendi özgün tarzını oluşturmayı tercih eder misin?", "category": "yaraticilik"},
-            {"text": "Müzik, resim, yazı gibi sanatsal aktivitelerle uğraşırken zamanın nasıl geçtiğini unutur musun?", "category": "yaraticilik"}
+            {"text": "Müzik, resim, yazı gibi sanatsal aktivitelerle uğraşırken zamanın nasıl geçtiğini unutur musun?", "category": "yaraticilik"},
+            # Yaratıcılık Soruları (Yeni)
+            {"text": "Sıradan bir nesneyi alıp ona bambaşka bir işlev kazandırmayı hayal eder misin?", "category": "yaraticilik"},
+            {"text": "Moda, dekorasyon veya mimari gibi görsel alanlardaki trendleri takip eder misin?", "category": "yaraticilik"},
+            {"text": "Kurallara sıkı sıkıya bağlı kalmak yerine esnek ve doğaçlama çalışmayı mı tercih edersin?", "category": "yaraticilik"},
+            {"text": "Hikaye anlatıcılığı veya senaryo yazımı gibi kurgusal dünyalar yaratmak ilgini çeker mi?", "category": "yaraticilik"},
+            {"text": "Bir problemi çözerken daha önce hiç denenmemiş yolları denemekten korkmaz mısın?", "category": "yaraticilik"}
         ]
         
         self.create_buttons()
@@ -89,12 +107,12 @@ class CareerQuizView(View):
             await self.finish_quiz(interaction)
 
     async def finish_quiz(self, interaction):
-        # 0. Normalizasyon (0-15 arası ham puanı 0-10 arasına çek)
-        # Maksimum puan = 5 soru * 3 puan = 15
+        # 0. Normalizasyon (0-30 arası ham puanı 0-10 arasına çek)
+        # Maksimum puan = 10 soru * 3 puan = 30
         normalized_scores = {}
         for cat, score in self.scores.items():
-            # (Ham Puan / 15) * 10 -> int
-            norm_score = round((score / 15) * 10)
+            # (Ham Puan / 30) * 10 -> int
+            norm_score = round((score / 30) * 10)
             normalized_scores[cat] = norm_score
 
         # 1. DB Güncelle (Normalize edilmiş puanlarla)
@@ -130,10 +148,10 @@ class CareerQuizView(View):
             medal = medals[i] if i < len(medals) else "•"
             top_careers_text += f"{medal} **{career['title']}** - %{percentage} uyum\n"
         
-        embed.add_field(name="📊 Kariyer Eşleşmelerin", value=top_careers_text, inline=False)
+        embed.add_field(name=" Kariyer Eşleşmelerin", value=top_careers_text, inline=False)
         
         # En iyi mesleğin detayı
-        embed.add_field(name=f"🎯 1. Tercih: {best_match['title']}", value=best_match['description'], inline=False)
+        embed.add_field(name=f" 1. Tercih: {best_match['title']}", value=best_match['description'], inline=False)
         
         # Puanları da gösterelim
         scores_text = (
@@ -141,10 +159,10 @@ class CareerQuizView(View):
             f"**Sosyal:** {normalized_scores['sosyal']}/10\n"
             f"**Yaratıcılık:** {normalized_scores['yaraticilik']}/10"
         )
-        embed.add_field(name="🧠 Kişilik Analizin", value=scores_text, inline=False)
+        embed.add_field(name=" Kişilik Analizin", value=scores_text, inline=False)
         
         embed.set_image(url=f"attachment://card_{self.username}.png")
-        embed.set_footer(text="Detaylı rapor ve görsel analiz ekte! 👇")
+        embed.set_footer(text="Detaylı rapor ve görsel analiz ekte! ")
         
         file_report = discord.File(report_path, filename="KariyerRaporu.html")
         file_card = discord.File(card_path, filename=f"card_{self.username}.png")

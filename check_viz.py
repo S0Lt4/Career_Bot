@@ -11,7 +11,10 @@ def check_viz():
         'title': 'Yazılım Geliştirici',
         'field': 'Teknoloji',
         'description': 'Test Description for Visualization.',
-        'roadmap_url': 'https://roadmap.sh/full-stack'
+        'roadmap_url': 'https://roadmap.sh/full-stack',
+        'score_analitik': 9,
+        'score_sosyal': 4,
+        'score_yaraticilik': 7
     }
     user_scores = {'analitik': 8, 'sosyal': 5, 'yaraticilik': 7}
     
